@@ -9,7 +9,7 @@ bot = telebot.TeleBot(token=os.environ.get('TOKEN'))
 
 
 application_list = []
-MERCH_LIST = ['свитшот', 'футболка']
+MERCH_LIST = ['свитшот', 'футболка', 'толстовка']
 SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL']
 
 
@@ -17,10 +17,11 @@ SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL']
 def start(message):
     application_list.clear()
     mess = f'Привет, {message.from_user.first_name} \n\nВыбери нужный пункт:'
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
     product_name1 = types.KeyboardButton('Свитшот')
     product_name2 = types.KeyboardButton('Футболка')
-    markup.add(product_name1, product_name2)
+    product_name3 = types.KeyboardButton('Толстовка')
+    markup.add(product_name1, product_name2, product_name3)
     msg = bot.send_message(message.chat.id, mess, reply_markup=markup)
     bot.register_next_step_handler(msg, choose_merch)
 
@@ -31,7 +32,7 @@ def choose_merch(message):
             msg = bot.send_message(message.chat.id, 'Некорректный ввод, попробуйте снова')
             bot.register_next_step_handler(msg, choose_merch)
             return
-        elif message.text.lower() == 'футболка':
+        elif message.text.lower() == 'футболка' or message.text.lower() == 'толстовка':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
             markup.add('Мальчик', 'Девочка')
             msg = bot.send_message(message.chat.id, 'Мальчик или девочка?', reply_markup=markup)
