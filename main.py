@@ -181,7 +181,7 @@ def process_proof(message):
     try:
         if answer == 'да' or answer == 'уверен':
             bot.send_message(message.chat.id, 'Спасибо за заказ!\nДля заказа снова используйте /start')
-            if application_list[0].lower() == 'футболка':
+            if application_list[0].lower() == 'футболка' or application_list[0].lower() == 'толстовка':
                 bot.send_message(541081425,
                                  f' <u>Продукт:</u> {application_list[0]}\n<u>Пол:</u> {application_list[1]}\n'
                                  f'<u>Размер:</u> {application_list[2]}\n<u>Кол-во:</u> {application_list[3]}\n'
