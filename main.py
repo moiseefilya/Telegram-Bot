@@ -9,8 +9,9 @@ bot = telebot.TeleBot(token=os.environ.get('TOKEN'))
 
 
 application_list = []
-MERCH_LIST = ['свитшот', 'футболка', 'толстовка']
+MERCH_LIST = ['Cвитшот', 'Футболка', 'Толстовка']
 SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL']
+AMOUNT_LIST = ['1', '2', '3', '4', '5', '...']
 
 
 @bot.message_handler(commands=['start'])
@@ -18,17 +19,15 @@ def start(message):
     application_list.clear()
     mess = f'Привет, {message.from_user.first_name} \n\nВыбери нужный пункт:'
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3)
-    product_name1 = types.KeyboardButton('Свитшот')
-    product_name2 = types.KeyboardButton('Футболка')
-    product_name3 = types.KeyboardButton('Толстовка')
-    markup.add(product_name1, product_name2, product_name3)
+    for x in  MERCH_LIST:
+        markup.add(types.KeyboardButton(x))
     msg = bot.send_message(message.chat.id, mess, reply_markup=markup)
     bot.register_next_step_handler(msg, choose_merch)
 
 
 def choose_merch(message):
     try:
-        if message.text.lower() not in MERCH_LIST:
+        if message.text not in MERCH_LIST:
             msg = bot.send_message(message.chat.id, 'Некорректный ввод, попробуйте снова')
             bot.register_next_step_handler(msg, choose_merch)
             return
@@ -39,13 +38,8 @@ def choose_merch(message):
             bot.register_next_step_handler(msg, choose_sex)
         else:
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3, one_time_keyboard=True)
-            size_xs = types.KeyboardButton('XS')
-            size_s = types.KeyboardButton('S')
-            size_m = types.KeyboardButton('M')
-            size_l = types.KeyboardButton('L')
-            size_xl = types.KeyboardButton('XL')
-            size_2xl = types.KeyboardButton('2XL')
-            markup.add(size_xs, size_s, size_m, size_l, size_xl, size_2xl)
+            for x in  SIZE_LIST:
+                markup.add(types.KeyboardButton(x))
             msg = bot.send_message(message.chat.id, 'Теперь определимся с размером:', reply_markup=markup)
             bot.register_next_step_handler(msg, choose_size)
         application_list.append(message.text)
@@ -62,13 +56,8 @@ def choose_sex(message):
             return
         application_list.append(sex)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3, one_time_keyboard=True)
-        size_xs = types.KeyboardButton('XS')
-        size_s = types.KeyboardButton('S')
-        size_m = types.KeyboardButton('M')
-        size_l = types.KeyboardButton('L')
-        size_xl = types.KeyboardButton('XL')
-        size_2xl = types.KeyboardButton('2XL')
-        markup.add(size_xs, size_s, size_m, size_l, size_xl, size_2xl)
+        for x in  SIZE_LIST:
+            markup.add(types.KeyboardButton(x))
         msg = bot.send_message(message.chat.id, 'Теперь определимся с размером:', reply_markup=markup)
         bot.register_next_step_handler(msg, choose_size)
     except Exception:
@@ -84,17 +73,8 @@ def choose_size(message):
             return
         application_list.append(size)
         markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=5, one_time_keyboard=True)
-        one = types.KeyboardButton('1')
-        two = types.KeyboardButton('2')
-        three = types.KeyboardButton('3')
-        four = types.KeyboardButton('4')
-        five = types.KeyboardButton('5')
-        six = types.KeyboardButton('6')
-        seven = types.KeyboardButton('7')
-        eight = types.KeyboardButton('8')
-        nine = types.KeyboardButton('9')
-        other = types.KeyboardButton('...')
-        markup.add(one, two, three, four, five, six, seven, eight, nine, other)
+        for x in  AMOUNT_LIST:
+            markup.add(types.KeyboardButton(x))
         msg = bot.send_message(message.chat.id, 'Выберите количество:', reply_markup=markup)
         bot.register_next_step_handler(msg, choose_amount)
     except Exception:
