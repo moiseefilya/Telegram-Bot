@@ -1,8 +1,9 @@
+import csv
+
 import telebot
 import os
 from dotenv import load_dotenv
 from telebot import types
-
 
 load_dotenv()
 bot = telebot.TeleBot(token=os.environ.get('TOKEN'))
@@ -11,6 +12,7 @@ bot = telebot.TeleBot(token=os.environ.get('TOKEN'))
 application_list = []
 MERCH_LIST = ['свитшот', 'футболка', 'толстовка']
 SIZE_LIST = ['XS', 'S', 'M', 'L', 'XL', '2XL']
+field_names = ['Продукт', 'Пол', 'Размер', 'Количество', 'ФИО', 'Контакты', 'Комментарий']
 
 
 @bot.message_handler(commands=['start'])
@@ -28,16 +30,13 @@ def start(message):
 
 def choose_merch(message):
     try:
-        if message.text.lower() not in MERCH_LIST:
-            msg = bot.send_message(message.chat.id, 'Некорректный ввод, попробуйте снова')
-            bot.register_next_step_handler(msg, choose_merch)
-            return
-        elif message.text.lower() == 'футболка' or message.text.lower() == 'толстовка':
+        if message.text.lower() == 'футболка' or message.text.lower() == 'толстовка':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2)
             markup.add('Мальчик', 'Девочка')
             msg = bot.send_message(message.chat.id, 'Мальчик или девочка?', reply_markup=markup)
+            application_list.append(message.text)
             bot.register_next_step_handler(msg, choose_sex)
-        else:
+        elif message.text.lower() == 'свитшот':
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=3, one_time_keyboard=True)
             size_xs = types.KeyboardButton('XS')
             size_s = types.KeyboardButton('S')
@@ -48,7 +47,12 @@ def choose_merch(message):
             markup.add(size_xs, size_s, size_m, size_l, size_xl, size_2xl)
             msg = bot.send_message(message.chat.id, 'Теперь определимся с размером:', reply_markup=markup)
             bot.register_next_step_handler(msg, choose_size)
-        application_list.append(message.text)
+            application_list.append(message.text)
+            application_list.append('-')
+        else:
+            msg = bot.send_message(message.chat.id, 'Некорректный ввод, попробуйте снова')
+            bot.register_next_step_handler(msg, choose_merch)
+            return
     except Exception:
         bot.send_message(message, 'что то не так')
 
@@ -83,18 +87,12 @@ def choose_size(message):
             bot.register_next_step_handler(msg, choose_size)
             return
         application_list.append(size)
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=5, one_time_keyboard=True)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True, row_width=2, one_time_keyboard=True)
         one = types.KeyboardButton('1')
         two = types.KeyboardButton('2')
         three = types.KeyboardButton('3')
-        four = types.KeyboardButton('4')
-        five = types.KeyboardButton('5')
-        six = types.KeyboardButton('6')
-        seven = types.KeyboardButton('7')
-        eight = types.KeyboardButton('8')
-        nine = types.KeyboardButton('9')
         other = types.KeyboardButton('...')
-        markup.add(one, two, three, four, five, six, seven, eight, nine, other)
+        markup.add(one, two, three, other)
         msg = bot.send_message(message.chat.id, 'Выберите количество:', reply_markup=markup)
         bot.register_next_step_handler(msg, choose_amount)
     except Exception:
@@ -136,16 +134,6 @@ def process_name(message):
             bot.register_next_step_handler(msg, process_name)
             return
         application_list.append(name)
-        msg = bot.send_message(message.chat.id, 'Введите учебную группу (либо "-"):')
-        bot.register_next_step_handler(msg, process_group)
-    except Exception:
-        bot.send_message(message.chat.id, 'Что-то не так')
-
-
-def process_group(message):
-    try:
-        group = message.text
-        application_list.append(str(group))
         msg = bot.send_message(message.chat.id, 'Введите контакт (номер тел/tg/почта):')
         bot.register_next_step_handler(msg, process_contact)
     except Exception:
@@ -170,6 +158,13 @@ def process_comm(message):
         ans1 = types.KeyboardButton('Да')
         ans2 = types.KeyboardButton('Нет')
         markup.add(ans1, ans2)
+        bot.send_message(message.chat.id, 'Ваш заказ:')
+        bot.send_message(message.chat.id,
+                                f'<u>Продукт:</u> {application_list[1]}\n<u>Пол:</u> {application_list[2]}\n'
+                                f'<u>Размер:</u> {application_list[3]}\n<u>Кол-во:</u> {application_list[4]}\n'
+                                f'<u>ФИО:</u> {application_list[5]}\n<u>Контакт:</u> {application_list[6]}\n'
+                                f'<u>Комментарий:</u> {application_list[7]}',
+                                parse_mode='html')
         msg = bot.send_message(message.chat.id, 'Вы уверены что хотите сделать заказ?', reply_markup=markup)
         bot.register_next_step_handler(msg, process_proof)
     except Exception:
@@ -181,20 +176,14 @@ def process_proof(message):
     try:
         if answer == 'да' or answer == 'уверен':
             bot.send_message(message.chat.id, 'Спасибо за заказ!\nДля заказа снова используйте /start')
-            if application_list[0].lower() == 'футболка' or application_list[0].lower() == 'толстовка':
-                bot.send_message(541081425,
-                                 f' <u>Продукт:</u> {application_list[0]}\n<u>Пол:</u> {application_list[1]}\n'
-                                 f'<u>Размер:</u> {application_list[2]}\n<u>Кол-во:</u> {application_list[3]}\n'
-                                 f'<u>ФИО:</u> {application_list[4]}\n<u>Группа:</u> {application_list[5]}\n'
-                                 f'<u>Контакт:</u> {application_list[6]}\n<u>Комментарий:</u> {application_list[7]}',
-                                 parse_mode='html')
-            else:
-                bot.send_message(541081425,
-                                 f' <u>Продукт:</u> {application_list[0]}\n<u>Размер:</u> {application_list[1]}\n'
-                                 f'<u>Кол-во:</u> {application_list[2]}\n<u>ФИО:</u> {application_list[3]}\n'
-                                 f'<u>Группа:</u> {application_list[4]}\n<u>Контакт:</u> {application_list[5]}\n'
-                                 f'<u>Комментарий:</u> {application_list[6]}',
-                                 parse_mode='html')
+            with open('shopping_list.csv', 'a', encoding='utf-8', newline='') as f:
+                if os.stat('shopping_list.csv').st_size == 0:
+                    writer = csv.writer(f)
+                    writer.writerow(field_names)
+                    writer.writerow(application_list)
+                else:
+                    writer = csv.writer(f)
+                    writer.writerow(application_list)
         else:
             bot.send_message(message.chat.id, 'Ваш заказ отменен, для заказа снова используйте /start')
     except Exception:
